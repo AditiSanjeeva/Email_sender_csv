@@ -17,19 +17,24 @@
     <div class="container">
         <h2>Contact Us</h2>
       <form method="post" enctype="multipart/form-data" id="form-name" onsubmit="sendEmails(event)">
-
+<label for="template">Email Template:</label>
+<select id="template" name="template">
+    <option value="default">Default</option>
+    <option value="option2">Option 2</option>
+    <option value="option3">Option 3</option>
+</select>
             <label for="emails">Email id:</label>
-            <input type="text" id="emails" name="emails" required>
+            <input type="text" id="emails" name="emails" >
 
             <label for="csvFile">Upload CSV File:</label>
-            <input type="file" id="csvFile" name="csvFile" accept=".csv,xlsx">
+            <input type="file" id="csvFile" name="csvFile" accept=".csv,xlsx" >
 
             <label for="subject">Subject:</label>
             <input type="text" id="subject" name="subject" required>
 
             <label for="content">Content:</label>
             <textarea id="content" name="content" rows="4" required></textarea>
-          
+
 
             <label for="attachment">Attach a File (Optional):</label>
             <input type="file" id="attachment" name="attachment" accept="image/*,application/pdf">
@@ -40,6 +45,7 @@
     
     <script>
 	var editor1 = new RichTextEditor("#content");
+	
 </script>
 </body>
 

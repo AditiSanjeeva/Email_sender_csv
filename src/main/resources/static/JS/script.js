@@ -6,6 +6,7 @@ function sendEmails(event) {
     var attachment = document.getElementById("attachment").files[0];
     var csvFile = document.getElementById("csvFile").files[0];
     var emailInput = document.getElementById("emails").value;
+    var template = document.getElementById("template").value;
 
     console.log("Attachment:", attachment);
 
@@ -14,7 +15,11 @@ function sendEmails(event) {
         return;
     }
 
-    var emailAddresses = emailInput.split(',');
+    var emailAddresses = [];
+
+    if (emailInput) {
+        emailAddresses = emailInput.split(',');
+    }
 
     if (csvFile) {
         var reader = new FileReader();
@@ -38,52 +43,70 @@ function sendEmails(event) {
                         }
                     });
 
-                    sendEmailsToAddresses(emailAddresses, subject, content, attachment);
+                    sendEmailsToAddresses(emailAddresses, subject, content, attachment, template);
                 }
             });
         };
         reader.readAsText(csvFile);
     } else {
-        sendEmailsToAddresses(emailAddresses, subject, content, attachment);
+        sendEmailsToAddresses(emailAddresses, subject, content, attachment, template);
     }
 }
 
-function sendEmailsToAddresses(emailAddresses, subject, content, attachment) {
-    emailAddresses.forEach(function (to) {
-        var formData = new FormData();
-        formData.append("to", to.trim()); // Trim to remove leading/trailing spaces
-        formData.append("subject", subject);
-        formData.append("content", content);
+  function sendEmailsToAddresses(emailAddresses, subject, content, attachment, template) {
 
-        if (attachment) {
-            formData.append("attachment", attachment);
-        }
+            function sendEmail(to, name) {
+                var formData = new FormData();
+                formData.append("to", to.trim());
+                formData.append("subject", subject);
 
-        fetch('/api/send-email', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => {
-            if (!response.ok) {
-                if (response.status === 413) {
-                    throw new Error('File size exceeds the allowed limit.');
-                } else {
-                    throw new Error('Network response was not ok');
+                var individualContent;
+
+                if (template === "default") {
+                    individualContent = content;
+                } else if (template === "option2") {
+                    individualContent = "Dear Artist,\n\n" + content;
+                } else if (template === "option3") {
+                    individualContent = "Dear " + name + ",\n\n" + content;
                 }
+
+                formData.append("content", individualContent);
+
+                if (attachment) {
+                    formData.append("attachment", attachment);
+                }
+
+                fetch('/api/send-email', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        if (response.status === 413) {
+                            throw new Error('File size exceeds the allowed limit.');
+                        } else {
+                            throw new Error('Network response was not ok');
+                        }
+                    }
+                    return response.json();
+                })
+                .catch(error => {
+                    console.error('Error sending message:', error);
+                });
             }
-            return response.json(); // Assuming the server returns JSON
-        })
-        .then(data => {
-            alert("Message sent successfully");
-            document.getElementById('subject').value = '';
-            document.getElementById('content').value = '';
-            document.getElementById('csvFile').value = '';
-            document.getElementById('attachment').value = '';
-            document.getElementById('emails').value = '';
-        })
-        .catch(error => {
-            console.error('Error sending message:', error);
-            alert("Error sending message: " + error.message);
-        });
-    });
-}
+
+            emailAddresses.forEach(function (to) {
+                var name = to.split('@')[0]; 
+                sendEmail(to, name);
+            });
+
+            setTimeout(function () {
+                alert(" messages sent successfully");
+                document.getElementById('subject').value = '';
+                document.getElementById('content').value = '';
+                document.getElementById('csvFile').value = '';
+                document.getElementById('attachment').value = '';
+                document.getElementById('emails').value = '';
+                document.getElementById('template').value = 'default';
+            });
+        }
